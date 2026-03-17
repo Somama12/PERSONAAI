@@ -20,6 +20,15 @@ const MessageSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'ai'],
         required: true
+    },
+    mode: {
+        type: String,
+        enum: ['Memory', 'Source', 'General'],
+        default: 'Memory'
+    },
+    sourceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Source'
     }
 }, { timestamps: true });
 
