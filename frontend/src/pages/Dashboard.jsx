@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Brain, Sparkles, X, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import MemoryPanel from '../components/MemoryPanel';
@@ -59,7 +60,7 @@ const Dashboard = () => {
 
     const fetchMemories = async (userId) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/memory?userId=${userId}`);
+            const res = await fetch(`http://localhost:5001/api/memory/${userId}`);
             if (res.ok) {
                 const data = await res.json();
                 setMemories(data);
@@ -289,25 +290,37 @@ const Dashboard = () => {
         <div className="flex h-screen bg-navy text-white font-sans overflow-hidden bg-grain relative">
 
             {/* Memory Toasts */}
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none">
+            <div className="absolute top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none w-80">
                 {pendingMemories.map((mem, i) => (
-                    <div key={i} className="pointer-events-auto bg-[#111827]/95 backdrop-blur-md border border-amber/30 p-4 rounded-xl shadow-2xl flex flex-col sm:flex-row gap-4 items-start sm:items-center max-w-md w-full animate-fade-in-up">
-                        <div className="flex-1">
-                            <h4 className="text-xs font-bold text-amber tracking-wider uppercase mb-1 flex items-center gap-1.5">
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                Memory Detected
-                            </h4>
-                            <p className="text-sm text-gray-200 leading-snug">{mem.fact}</p>
-                        </div>
-                        <div className="flex shrink-0 gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                            <button onClick={() => handleConfirmMemory(mem, i)} className="flex-1 sm:flex-none px-3 py-1.5 bg-amber/20 hover:bg-amber/30 text-amber text-xs font-bold rounded-lg transition-colors border border-amber/20">
-                                Save
-                            </button>
-                            <button onClick={() => handleDismissMemory(i)} className="flex-1 sm:flex-none px-3 py-1.5 hover:bg-gray-800 text-gray-400 text-xs font-semibold rounded-lg transition-colors border border-transparent">
-                                Dismiss
-                            </button>
+                    <div key={i} className="pointer-events-auto bg-[#0D1220]/95 backdrop-blur-xl border border-amber/25 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden animate-fade-in-up">
+                        {/* Top accent bar */}
+                        <div className="h-0.5 w-full bg-gradient-to-r from-amber/60 via-amber to-amber/60" />
+                        <div className="p-4">
+                            <div className="flex items-start justify-between gap-3 mb-2.5">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-lg bg-amber/15 border border-amber/25 flex items-center justify-center">
+                                        <Brain size={11} className="text-amber" />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-amber tracking-widest uppercase">Memory Detected</span>
+                                        {mem.category && (
+                                            <span className="ml-2 text-[9px] px-1.5 py-0.5 bg-amber/10 text-amber/70 rounded-full border border-amber/15 font-semibold uppercase tracking-wider">{mem.category}</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <button onClick={() => handleDismissMemory(i)} className="text-gray-600 hover:text-gray-400 transition-colors mt-0.5">
+                                    <X size={13} />
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-200 leading-relaxed mb-3">{mem.fact}</p>
+                            <div className="flex gap-2">
+                                <button onClick={() => handleConfirmMemory(mem, i)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-amber/15 hover:bg-amber/25 text-amber text-xs font-bold rounded-xl transition-all border border-amber/20 hover:border-amber/40 hover:shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                                    <Sparkles size={11} /> Save to Memory
+                                </button>
+                                <button onClick={() => handleDismissMemory(i)} className="px-3 py-2 hover:bg-gray-800/60 text-gray-500 hover:text-gray-300 text-xs font-medium rounded-xl transition-colors border border-gray-800">
+                                    Skip
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -327,8 +340,13 @@ const Dashboard = () => {
             {/* Main Chat Area */}
             <main className="flex-1 flex flex-col min-w-0 bg-[#0A0F1E] z-10 relative">
 
-                {/* Header Backdrop */}
-                <div className="absolute top-0 w-full h-32 bg-gradient-to-b from-[#0A0F1E] to-transparent z-0 pointer-events-none"></div>
+                {/* Mode Indicator Bar */}
+                <div className="absolute top-0 left-0 right-0 h-[3px] z-30">
+                    <div className={`h-full transition-all duration-500 ${activeMode === 'Memory' ? 'bg-gradient-to-r from-transparent via-amber/60 to-transparent' :
+                        activeMode === 'Source' ? 'bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent' :
+                            'bg-gradient-to-r from-transparent via-cyan/60 to-transparent'
+                        }`} />
+                </div>
 
                 {/* Top Action Bar */}
                 <div className="absolute top-0 left-0 right-0 p-4 sm:p-6 z-20 flex justify-end items-center pointer-events-none">
@@ -369,15 +387,63 @@ const Dashboard = () => {
                 {/* Messages List */}
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 pt-20 pb-32 custom-scrollbar z-10 relative">
                     {displayedMessages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-4">
-                            <div className="w-16 h-16 bg-gray-800/50 rounded-full flex items-center justify-center border border-gray-700">
-                                <span className="text-2xl opacity-50">✨</span>
-                            </div>
-                            <p className="text-sm font-medium">
-                                {activeMode === 'Source' && !activeSource
-                                    ? "Select a document to start chatting."
-                                    : `How can I help you in ${activeMode} mode?`}
-                            </p>
+                        <div className="h-full flex flex-col items-center justify-center">
+                            {activeMode === 'Memory' && (
+                                <div className="text-center space-y-4 max-w-xs">
+                                    <div className="w-16 h-16 mx-auto rounded-2xl bg-amber/10 border border-amber/20 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                                        <Brain size={28} className="text-amber" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-bold text-base mb-1">Memory Mode Active</h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed">Tell me about yourself — your job, habits, goals. I'll learn and remember facts about you automatically.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 mt-4">
+                                        {['I work as a developer', 'I enjoy hiking', 'I\'m learning Spanish', 'My goal is to read 12 books'].map(s => (
+                                            <button key={s} onClick={() => setInputValue(s)} className="p-2.5 text-left text-[11px] text-gray-400 hover:text-amber bg-gray-900/50 hover:bg-amber/5 border border-gray-800 hover:border-amber/20 rounded-xl transition-all leading-snug">{s}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {activeMode === 'Source' && (
+                                <div className="text-center space-y-4 max-w-xs">
+                                    <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.08)]">
+                                        <BookOpen size={28} className="text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-bold text-base mb-1">
+                                            {activeSource ? 'Document Ready' : 'Select a Document'}
+                                        </h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed">
+                                            {activeSource
+                                                ? 'Ask anything about the selected document. I\'ll only answer based on its contents.'
+                                                : 'Choose a document from the Knowledge Base panel on the right to start a grounded conversation.'}
+                                        </p>
+                                    </div>
+                                    {activeSource && (
+                                        <div className="grid grid-cols-1 gap-2 mt-4">
+                                            {['Summarize this document', 'What are the key points?', 'What topics does this cover?'].map(s => (
+                                                <button key={s} onClick={() => setInputValue(s)} className="p-2.5 text-left text-[11px] text-gray-400 hover:text-emerald-400 bg-gray-900/50 hover:bg-emerald-500/5 border border-gray-800 hover:border-emerald-500/20 rounded-xl transition-all">{s}</button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {activeMode === 'General' && (
+                                <div className="text-center space-y-4 max-w-xs">
+                                    <div className="w-16 h-16 mx-auto rounded-2xl bg-cyan/10 border border-cyan/20 flex items-center justify-center shadow-[0_0_30px_rgba(6,182,212,0.08)]">
+                                        <Sparkles size={28} className="text-cyan" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-bold text-base mb-1">General Chat</h3>
+                                        <p className="text-sm text-gray-500 leading-relaxed">Ask me anything — I'm ready to help with writing, analysis, brainstorming, coding, or just a conversation.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 mt-4">
+                                        {['Write me a poem', 'Debug my code', 'Explain quantum computing', 'Help me brainstorm ideas'].map(s => (
+                                            <button key={s} onClick={() => setInputValue(s)} className="p-2.5 text-left text-[11px] text-gray-400 hover:text-cyan bg-gray-900/50 hover:bg-cyan/5 border border-gray-800 hover:border-cyan/20 rounded-xl transition-all leading-snug">{s}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         displayedMessages.map((msg) => (

@@ -6,56 +6,116 @@ const { GoogleGenAI } = require('@google/genai');
 
 const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
-// Helper: Get Embedding using Gemini
+// Separate v1 client — gemini-embedding-2-preview is not available on v1beta (SDK default)
+const aiEmbed = process.env.GEMINI_API_KEY
+    ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+    : null;
+
+const VALID_CATEGORIES = ['Work', 'Personal', 'Ideas', 'Learning', 'Health', 'Miscellaneous'];
+
+// ── Helper: Get Embedding ──────────────────────────────────────────────────────
 async function getEmbedding(text) {
-    if (!ai) throw new Error("Gemini API not configured");
-    // Using simple text-embedding-004 model
-    const response = await ai.models.embedContent({
-        model: "text-embedding-004",
-        content: text
+    if (!aiEmbed) throw new Error('Gemini API not configured');
+    const response = await aiEmbed.models.embedContent({
+        model: 'gemini-embedding-2-preview',
+        contents: text,
     });
-    return response.embedding.values;
+    const embeddingObj = response.embeddings?.[0] ?? response.embedding;
+    return embeddingObj.values;
 }
 
-// Helper: Cosine Similarity
+async function getEmbeddingsBatch(texts) {
+    if (!aiEmbed) throw new Error('Gemini API not configured');
+    if (!texts || texts.length === 0) return [];
+    
+    // Batch in chunks to respect API limits if extremely large, though embedContent allows array
+    const BATCH_SIZE = 100;
+    const allEmbeddings = [];
+    
+    for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+        const batch = texts.slice(i, i + BATCH_SIZE);
+        const response = await aiEmbed.models.embedContent({
+            model: 'gemini-embedding-2-preview',
+            contents: batch,
+        });
+        const batchEmbeddings = response.embeddings.map(e => e.values);
+        allEmbeddings.push(...batchEmbeddings);
+    }
+    
+    return allEmbeddings;
+}
+
+// ── Helper: Cosine Similarity ──────────────────────────────────────────────────
 function cosineSimilarity(vecA, vecB) {
-    let dotProduct = 0.0;
-    let normA = 0.0;
-    let normB = 0.0;
+    let dot = 0, normA = 0, normB = 0;
     for (let i = 0; i < vecA.length; i++) {
-        dotProduct += vecA[i] * vecB[i];
+        dot += vecA[i] * vecB[i];
         normA += vecA[i] ** 2;
         normB += vecB[i] ** 2;
     }
     if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// Helper: Chunk Text
-function chunkText(text, maxWords = 200) {
-    const words = text.split(/\s+/);
+// ── Helper: Sentence-aware chunking ───────────────────────────────────────────
+// Splits text at sentence boundaries, accumulating up to maxChars before starting a new chunk.
+// This avoids cutting mid-sentence which degrades embedding quality.
+function chunkText(text, maxChars = 1200) {
+    // Normalize whitespace
+    const normalized = text.replace(/\s+/g, ' ').trim();
+
+    // Split into sentences using punctuation boundaries
+    const sentences = normalized.match(/[^.!?]+[.!?]+["']?|[^.!?]+$/g) || [normalized];
+
     const chunks = [];
-    for (let i = 0; i < words.length; i += maxWords) {
-        chunks.push(words.slice(i, i + maxWords).join(' '));
+    let current = '';
+
+    for (const sentence of sentences) {
+        const trimmed = sentence.trim();
+        if (!trimmed) continue;
+
+        if ((current + ' ' + trimmed).trim().length > maxChars && current.length > 0) {
+            chunks.push(current.trim());
+            current = trimmed;
+        } else {
+            current = current ? current + ' ' + trimmed : trimmed;
+        }
     }
+
+    if (current.trim()) chunks.push(current.trim());
     return chunks;
 }
 
+// ── Helper: Detect best category for source query ─────────────────────────────
+async function detectQueryCategory(query) {
+    if (!ai) return 'Learning';
+    try {
+        const prompt = `Classify this query into one category: Work, Personal, Ideas, Learning, Health, Miscellaneous.\nQuery: "${query}"\nReturn ONLY the category word.`;
+        const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+        const cat = (res.text || '').trim();
+        const formatted = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+        return VALID_CATEGORIES.includes(formatted) ? formatted : 'Learning';
+    } catch {
+        return 'Learning';
+    }
+}
+
+// ── uploadPdf ──────────────────────────────────────────────────────────────────
 exports.uploadPdf = async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: 'No PDF provided' });
         const { userId } = req.body;
 
         const data = await pdfParse(req.file.buffer);
-        const text = data.text;
+        const chunks = chunkText(data.text);
 
-        const chunks = chunkText(text);
-
-        let contentChunks = [];
-        for (const chunk of chunks) {
-            if (chunk.trim() === '') continue;
-            const embedding = await getEmbedding(chunk);
-            contentChunks.push({ text: chunk, embedding });
+        const validChunks = chunks.filter(c => c.trim() !== '');
+        const contentChunks = [];
+        if (validChunks.length > 0) {
+            const embeddings = await getEmbeddingsBatch(validChunks);
+            for (let i = 0; i < validChunks.length; i++) {
+                contentChunks.push({ text: validChunks[i], embedding: embeddings[i] });
+            }
         }
 
         const source = new Source({
@@ -73,11 +133,11 @@ exports.uploadPdf = async (req, res) => {
     }
 };
 
+// ── scrapeUrl ──────────────────────────────────────────────────────────────────
 exports.scrapeUrl = async (req, res) => {
     try {
         const { userId, url } = req.body;
 
-        // Use native fetch to get HTML
         const fetchRes = await fetch(url);
         const html = await fetchRes.text();
 
@@ -87,20 +147,16 @@ exports.scrapeUrl = async (req, res) => {
 
         const chunks = chunkText(text);
 
-        let contentChunks = [];
-        for (const chunk of chunks) {
-            if (chunk.trim() === '') continue;
-            const embedding = await getEmbedding(chunk);
-            contentChunks.push({ text: chunk, embedding });
+        const validChunks = chunks.filter(c => c.trim() !== '');
+        const contentChunks = [];
+        if (validChunks.length > 0) {
+            const embeddings = await getEmbeddingsBatch(validChunks);
+            for (let i = 0; i < validChunks.length; i++) {
+                contentChunks.push({ text: validChunks[i], embedding: embeddings[i] });
+            }
         }
 
-        const source = new Source({
-            userId,
-            url,
-            type: 'url',
-            contentChunks
-        });
-
+        const source = new Source({ userId, url, type: 'url', contentChunks });
         await source.save();
         res.status(201).json({ sourceId: source._id, url: source.url });
     } catch (err) {
@@ -109,6 +165,7 @@ exports.scrapeUrl = async (req, res) => {
     }
 };
 
+// ── querySource ────────────────────────────────────────────────────────────────
 exports.querySource = async (req, res) => {
     try {
         const { userId, sourceId, query } = req.body;
@@ -118,26 +175,23 @@ exports.querySource = async (req, res) => {
 
         const queryEmbedding = await getEmbedding(query);
 
-        // Find top 3 most similar chunks
-        const scoredChunks = source.contentChunks.map(chunk => ({
-            text: chunk.text,
-            score: cosineSimilarity(queryEmbedding, chunk.embedding)
-        }));
+        // Score all chunks and pick top 4
+        const scoredChunks = source.contentChunks
+            .map(chunk => ({ text: chunk.text, score: cosineSimilarity(queryEmbedding, chunk.embedding) }))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4);
 
-        scoredChunks.sort((a, b) => b.score - a.score);
-        const topChunks = scoredChunks.slice(0, 3).map(c => c.text);
-
-        const contextText = topChunks.join('\n\n');
+        const contextText = scoredChunks.map(c => c.text).join('\n\n');
 
         const prompt = `
-            You must answer the user's question STRICTLY using the provided context from a source document.
-            If the answer is not in the context, say "I cannot answer this based on the provided source." Do not use outside knowledge.
-            
-            Context from source:
-            ${contextText}
-            
-            User's question: ${query}
-        `;
+You must answer the user's question STRICTLY using the provided context from a source document.
+If the answer is not in the context, say "I cannot answer this based on the provided source." Do not use outside knowledge.
+
+Context from source:
+${contextText}
+
+User's question: ${query}
+        `.trim();
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -146,10 +200,13 @@ exports.querySource = async (req, res) => {
 
         const aiText = response.text || "I'm sorry, I couldn't process that.";
 
-        const userMessage = new Message({ userId, text: query, category: 'Learning', role: 'user', mode: 'Source', sourceId });
+        // ── Detect query category instead of hardcoding 'Learning' ──
+        const queryCategory = await detectQueryCategory(query);
+
+        const userMessage = new Message({ userId, text: query, category: queryCategory, role: 'user', mode: 'Source', sourceId });
         await userMessage.save();
 
-        const aiMessage = new Message({ userId, text: aiText, category: 'Learning', role: 'ai', mode: 'Source', sourceId });
+        const aiMessage = new Message({ userId, text: aiText, category: queryCategory, role: 'ai', mode: 'Source', sourceId });
         await aiMessage.save();
 
         res.status(200).json({ userMessage, aiMessage });
@@ -159,6 +216,7 @@ exports.querySource = async (req, res) => {
     }
 };
 
+// ── getUserSources ─────────────────────────────────────────────────────────────
 exports.getUserSources = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -170,11 +228,11 @@ exports.getUserSources = async (req, res) => {
     }
 };
 
+// ── deleteSource ───────────────────────────────────────────────────────────────
 exports.deleteSource = async (req, res) => {
     try {
         const { sourceId } = req.params;
         await Source.findByIdAndDelete(sourceId);
-        // Also delete messages associated with this source
         await Message.deleteMany({ sourceId });
         res.status(200).json({ message: 'Source deleted' });
     } catch (err) {

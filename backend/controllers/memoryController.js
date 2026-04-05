@@ -3,45 +3,44 @@ const Message = require('../models/Message');
 const { GoogleGenAI } = require('@google/genai');
 
 const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
+const VALID_CATEGORIES = ['Work', 'Personal', 'Ideas', 'Learning', 'Health', 'Miscellaneous'];
 
 exports.extractMemory = async (req, res) => {
     try {
-        const { userId, text, aiResponse } = req.body;
-        if (!ai) return res.status(500).json({ message: 'Gemini API not configured' });
+        const { userId, text } = req.body;
+        if (!userId || !text) return res.status(400).json({ message: 'User ID and text required' });
+
+        if (!ai) return res.status(500).json({ message: 'AI not configured' });
+
+        // Retrieve existing memories to avoid re-extracting the exact same factual string
+        const existingMemories = await Memory.find({ userId });
+        const memoryContext = existingMemories.map(m => `- ${m.content}`).join('\n');
 
         const prompt = `
-            Analyze this recent exchange to extract any new personal facts about the user.
-            User said: "${text}"
-            AI replied: "${aiResponse}"
+Extract core actionable facts or long-term personal details about the user from the following text.
+If no important fact exists, output empty array [].
+Otherwise, return a JSON array of objects with keys: "fact" (String), "category" (String: Work, Personal, Ideas, Learning, Health, Miscellaneous), "confidence" (Number between 0.1 and 1.0).
 
-            If there is a new fact, return a JSON array of objects with keys: "fact" (String), "category" (String: Work, Personal, Ideas, Learning, Health, Miscellaneous), "confidence" (Number between 0.1 and 1.0).
-            If no new facts, return [].
-            Return ONLY valid JSON.
-        `;
+Already known facts:
+${memoryContext || "None"}
+
+Please DO NOT RE-EXTRACT facts that are already in the "Already known facts" list!
+
+Text: "${text}"
+`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
+            config: { responseMimeType: 'application/json' }
         });
 
-        let jsonText = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
-        let extractedFacts = [];
-        try {
-            extractedFacts = JSON.parse(jsonText);
-        } catch (e) {
-            console.error("Failed to parse extracted memory JSON", e);
-        }
-
-        if (extractedFacts.length === 0) {
+        const data = JSON.parse(response.text.trim());
+        if (!Array.isArray(data) || data.length === 0) {
             return res.status(200).json({ extracted: [] });
         }
 
-        // Check for contradictions (simplified logic: just return all extracted for frontend to verify)
-        // In a real app we'd do semantic similarity here against existing memories.
-        // Returning them as 'extracted' so frontend can display the confirmation toast.
-
-        res.status(200).json({ extracted: extractedFacts });
-
+        res.status(200).json({ extracted: data });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -50,9 +49,54 @@ exports.extractMemory = async (req, res) => {
 exports.confirmMemory = async (req, res) => {
     try {
         const { userId, content, category, confidence } = req.body;
-        const memory = new Memory({ userId, content, category, confidence, source: 'conversation' });
+        const finalCategory = VALID_CATEGORIES.includes(category) ? category : 'Miscellaneous';
+
+        // Duplicate and Contradiction Check
+        if (ai) {
+            const existing = await Memory.find({ userId, category: finalCategory });
+            if (existing.length > 0) {
+                const existingList = existing.map(m => `ID: ${m._id}, Content: ${m.content}`).join('\n');
+                const conflictPrompt = `
+You are checking a personal memory database for contradictions or exact duplicates.
+
+New fact to save: "${content}"
+
+Existing memories in the same category:
+${existingList}
+
+Does the new fact contradict or closely duplicate any existing memory? 
+Return JSON: { "conflict": true/false, "conflictingId": "THE_ID", "resolution": "Brief explanation" }
+Return ONLY the JSON object.
+                `.trim();
+
+                try {
+                    const conflictRes = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: conflictPrompt,
+                        config: { responseMimeType: 'application/json' }
+                    });
+
+                    const conflictData = JSON.parse(conflictRes.text.trim());
+
+                    if (conflictData.conflict && conflictData.conflictingId) {
+                        const updated = await Memory.findByIdAndUpdate(
+                            conflictData.conflictingId,
+                            { content, confidence, updatedAt: new Date() },
+                            { new: true }
+                        );
+                        if (updated) {
+                            return res.status(200).json({ memory: updated, replaced: true, resolution: conflictData.resolution });
+                        }
+                    }
+                } catch (e) {
+                    console.error('Conflict detection failed (non-fatal):', e.message);
+                }
+            }
+        }
+
+        const memory = new Memory({ userId, content, category: finalCategory, confidence, source: 'conversation' });
         await memory.save();
-        res.status(201).json(memory);
+        res.status(201).json({ memory, replaced: false });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
