@@ -160,6 +160,18 @@ const Dashboard = () => {
         const category = inputCategory;
         const currentMode = activeMode;
 
+        // Optimistically add user message to UI
+        const tempUserMessage = {
+            _id: Date.now().toString(),
+            userId: user._id,
+            text,
+            category,
+            role: 'user',
+            mode: currentMode,
+            createdAt: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, tempUserMessage]);
+
         setInputValue("");
         setIsLoading(true);
 
@@ -180,7 +192,8 @@ const Dashboard = () => {
             const data = await res.json();
 
             if (res.ok) {
-                setMessages(prev => [...prev, data.userMessage, data.aiMessage]);
+                // Replace the temporary user message with the actual ones from the server
+                setMessages(prev => [...prev.filter(m => m._id !== tempUserMessage._id), data.userMessage, data.aiMessage]);
                 // If Memory mode, extract facts
                 if (currentMode === 'Memory') {
                     try {
@@ -203,15 +216,21 @@ const Dashboard = () => {
                         console.error("Extraction error", extErr);
                     }
                 }
+            } else {
+                setMessages(prev => prev.filter(m => m !== tempUserMessage));
             }
         } catch (err) {
-            console.error(err);
+            console.error("Chat error", err);
+            setMessages(prev => prev.filter(m => m !== tempUserMessage));
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleConfirmMemory = async (factObj, index) => {
+        // Optimistically remove the memory box for a snappier UI
+        setPendingMemories(prev => prev.filter((_, i) => i !== index));
+
         try {
             const res = await fetch('http://localhost:5001/api/memory/confirm', {
                 method: 'POST',
@@ -225,7 +244,6 @@ const Dashboard = () => {
             });
             if (res.ok) {
                 fetchMemories(user._id);
-                setPendingMemories(prev => prev.filter((_, i) => i !== index));
             }
         } catch (err) {
             console.error("Memory confirm error", err);
@@ -507,7 +525,7 @@ const Dashboard = () => {
                             </div>
                         </div>
                     )}
-                    <div ref={messagesEndRef} className="h-4" />
+                    <div ref={messagesEndRef} className="h-24" />
                 </div>
 
                 {/* Input Area */}

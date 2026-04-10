@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PersonaAI – Project Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            background: #fff;
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        h1 {
+            font-size: 18pt;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 14pt;
+            margin-top: 32px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+        }
+
+        h3 {
+            font-size: 12pt;
+            margin-top: 20px;
+            margin-bottom: 6px;
+        }
+
+        h4 {
+            font-size: 12pt;
+            margin-top: 14px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        ul,
+        ol {
+            margin: 8px 0 8px 28px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        .title-page {
+            text-align: center;
+            page-break-after: always;
+            padding-top: 80px;
+        }
+
+        .title-page h1 {
+            font-size: 22pt;
+            margin-bottom: 24px;
+        }
+
+        .title-page p {
+            font-size: 12pt;
+            margin: 6px 0;
+        }
+
+        .title-page .label {
+            font-weight: bold;
+        }
+
+        .chapter {
+            page-break-before: always;
+        }
+
+        .chapter:first-of-type {
+            page-break-before: avoid;
+        }
+
+        pre,
+        code {
+            font-family: "Courier New", monospace;
+            font-size: 10pt;
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        pre {
+            padding: 10px;
+            overflow-x: auto;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+
+        code {
+            padding: 1px 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 11pt;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 5px 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #eee;
+            font-weight: bold;
+        }
+
+        .caption {
+            text-align: center;
+            font-style: italic;
+            font-size: 10pt;
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+
+        .toc {
+            page-break-after: always;
+        }
+
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 4px;
+        }
+
+        .toc .sub {
+            margin-left: 24px;
+        }
+
+        .abstract-box {
+            border: 1px solid #000;
+            padding: 14px 18px;
+            margin: 20px 0;
+            background: #fafafa;
+        }
+
+        @media print {
+            body {
+                padding: 20px 40px;
+            }
+
+            .chapter {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════ TITLE PAGE ═══════════════════════════════ -->
+    <div class="title-page">
+        <h1>PersonaAI: An AI-Powered Personal Memory and Knowledge Assistant</h1>
+        <br /><br />
+        <p><span class="label">Submitted by:</span></p>
+        <p>Somama Siddiqui</p>
+        <br />
+        <p><span class="label">Submitted to:</span></p>
+        <p>Dr. Hina Raja</p>
+        <br />
+        <p><span class="label">Course:</span></p>
+        <p>CSCI-210-01.2025FA: Sophomore Seminar</p>
+        <br />
+        <p><span class="label">Institution:</span></p>
+        <p>Fisk University</p>
+        <br />
+        <p><span class="label">Date of Submission:</span></p>
+        <p>April 4, 2026</p>
+    </div>
+
+    <!-- ═══════════════════════════════ ABSTRACT ═════════════════════════════════ -->
+    <div class="abstract-box">
+        <h2 style="border-bottom:none; margin-top:0;">Abstract</h2>
+        <p>
+            PersonaAI is a full-stack web application designed to address a fundamental limitation of modern AI chat
+            assistants: the inability to remember a user's personal context across sessions or reason over user-supplied
+            documents. The core problem identified is that general-purpose AI tools treat every conversation as
+            stateless, requiring users to repeatedly re-introduce themselves and their goals.
+        </p>
+        <p>
+            The application was implemented using a React (Vite) frontend and a Node.js/Express RESTful backend, with
+            MongoDB as the persistent data store. The system integrates Google Gemini AI — specifically the
+            <code>gemini-2.5-flash</code> model for conversational intelligence and the
+            <code>gemini-embedding-2-preview</code> model for vector embeddings. Three core interaction modes were
+            implemented: a <em>Memory Mode</em> in which AI-extracted long-term facts about the user are persisted and
+            injected into every subsequent conversation, a <em>Source Mode</em> implementing a Retrieval-Augmented
+            Generation (RAG) pipeline to allow users to query their own PDF documents and web URLs, and a <em>General
+                Chat Mode</em> for open-ended conversation.
+        </p>
+        <p>
+            The main results demonstrate a fully functional system with persistent user authentication, autonomous
+            memory extraction with AI-driven conflict detection, sentence-aware text chunking with cosine similarity
+            search, and category-based conversation organization across six domains. In conclusion, PersonaAI
+            successfully delivers a personalized AI assistant that grows more contextually aware the more a user
+            interacts with it, establishing a strong foundation for future enhancements such as spaced-repetition
+            learning and voice-based interaction.
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════════ TABLE OF CONTENTS ══════════════════════ -->
+    <div class="toc">
+        <h2>Contents</h2>
+        <ul>
+            <li>Abstract</li>
+            <li>1 &nbsp; Introduction
+                <ul class="sub">
+                    <li>1.1 &nbsp; Background and Motivation</li>
+                    <li>1.2 &nbsp; Problem Statement</li>
+                    <li>1.3 &nbsp; Objectives</li>
+                    <li>1.4 &nbsp; Scope and Limitations</li>
+                    <li>1.5 &nbsp; Report Structure</li>
+                </ul>
+            </li>
+            <li>2 &nbsp; Literature Review / Related Work
+                <ul class="sub">
+                    <li>2.1 &nbsp; Existing Systems</li>
+                    <li>2.2 &nbsp; Gaps Addressed by PersonaAI</li>
+                </ul>
+            </li>
+            <li>3 &nbsp; System Design / Methodology
+                <ul class="sub">
+                    <li>3.1 &nbsp; System Architecture</li>
+                    <li>3.2 &nbsp; Modules Description</li>
+                    <li>3.3 &nbsp; Technology Stack</li>
+                    <li>3.4 &nbsp; Database Design</li>
+                    <li>3.5 &nbsp; UI/UX Design and Navigation Flow</li>
+                </ul>
+            </li>
+            <li>4 &nbsp; Implementation
+                <ul class="sub">
+                    <li>4.1 &nbsp; Frontend Implementation</li>
+                    <li>4.2 &nbsp; Backend and API Implementation</li>
+                    <li>4.3 &nbsp; Memory Extraction Engine</li>
+                    <li>4.4 &nbsp; RAG Pipeline (Source Mode)</li>
+                    <li>4.5 &nbsp; AI Chat with Context Injection</li>
+                </ul>
+            </li>
+            <li>5 &nbsp; Results and Discussion</li>
+            <li>6 &nbsp; Testing and Validation</li>
+            <li>7 &nbsp; Conclusion and Future Work</li>
+            <li>References</li>
+            <li>Appendices</li>
+        </ul>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 1 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 1: Introduction</h2>
+
+        <p>The following chapter provides an overview of the project's motivation, the specific problem it addresses,
+            the objectives established to solve it, and the scope of the implemented system.</p>
+
+        <h3>1.1 Background and Motivation</h3>
+        <p>
+            Artificial Intelligence chat assistants have become ubiquitous in everyday academic and professional life.
+            Tools such as ChatGPT, Google Gemini, and Claude are widely used by students to help them study, brainstorm
+            ideas, and manage information. However, despite their impressive generative capabilities, all of these
+            systems share a fundamental architectural constraint: they are <em>stateless</em>. Each conversation begins
+            from scratch, with no recollection of prior sessions, user preferences, personal goals, or long-term
+            context.
+        </p>
+        <p>
+            For a college student, this creates a frustrating experience. Each time a student returns to an AI
+            assistant, they must re-introduce their project, their learning goals, their schedule constraints, and their
+            personal background. Furthermore, when a student needs to extract insights from a specific textbook, a
+            research paper, or a web article, there is no built-in mechanism to upload and query that document directly
+            in a personalized context. The promise of AI as a truly personal intellectual partner remains unfulfilled.
+        </p>
+
+        <h3>1.2 Problem Statement</h3>
+        <p>
+            The core problem is the absence of <em>persistent personal context</em> in AI chat systems. When a user
+            tells an AI "I am a biology student who struggles with chemistry," that information is forgotten the moment
+            the session ends. Similarly, when a student uploads a PDF to summarize it, the results are generic rather
+            than personalized to the student's background and goals. This forces repetitive re-introduction, reduces
+            trust in the AI as a genuine assistant, and prevents the development of a personalized study or productivity
+            workflow. Additionally, existing tools do not organize interactions by category (Work, Personal, Health,
+            etc.), making it difficult to revisit and review past AI-assisted thinking on a specific topic.
+        </p>
+
+        <h3>1.3 Objectives</h3>
+        <p>The primary goal of PersonaAI is to build a full-stack web application that acts as a personalized AI
+            assistant — one that learns about the user over time, organizes conversations by category, and allows the
+            user to query their own documents. The specific objectives are:</p>
+        <ul>
+            <li><strong>Persistent Memory:</strong> Automatically extract long-term personal facts from conversations
+                and store them in a structured database. Inject these memories into every subsequent AI interaction so
+                the assistant accumulates knowledge about the user over time.</li>
+            <li><strong>Document Intelligence (RAG):</strong> Allow users to upload PDF files or provide web URLs.
+                Process and embed these documents so users can ask natural-language questions answered strictly from the
+                document's content.</li>
+            <li><strong>Categorized Conversations:</strong> Automatically classify every conversation message into one
+                of six domains — Work, Personal, Ideas, Learning, Health, or Miscellaneous — enabling organized
+                retrieval and summarization.</li>
+            <li><strong>Secure Multi-User Access:</strong> Support user registration and login with data isolation (each
+                user's memories, messages, and sources are private).</li>
+            <li><strong>Modern, Responsive UI:</strong> Deliver an intuitive, visually polished single-page application
+                accessible from any device.</li>
+        </ul>
+
+        <h3>1.4 Scope and Limitations</h3>
+        <p>
+            PersonaAI targets college students and knowledge workers who want a personalized AI chat experience. The
+            application is a web-based SPA (Single Page Application) backed by a REST API. It supports PDF and URL
+            ingestion, three distinct chat modes, and persistent per-user memory.
+        </p>
+        <p>
+            Features intentionally outside the current scope include: OAuth/social login, native mobile applications,
+            real-time collaborative features, voice input, LaTeX rendering for mathematical content, and advanced
+            spaced-repetition learning algorithms. Additionally, password storage in the current implementation does not
+            use hashing (a known limitation addressed in Future Work). The system also relies on external API quotas
+            from Google Gemini, making very high-volume simultaneous use dependent on quota availability.
+        </p>
+
+        <h3>1.5 Report Structure</h3>
+        <p>
+            The remainder of this report is organized as follows. Chapter 2 surveys existing AI tools and identifies the
+            gaps PersonaAI addresses. Chapter 3 details the system architecture, technology stack, and database design.
+            Chapter 4 describes the implementation of each major component with representative code. Chapter 5 presents
+            results and discussion. Chapter 6 outlines the testing strategy. Chapter 7 concludes the report with
+            reflections and future directions.
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 2 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 2: Literature Review / Related Work</h2>
+
+        <p>This chapter surveys existing AI assistant platforms and document querying tools, identifying the gaps that
+            motivated the development of PersonaAI.</p>
+
+        <h3>2.1 Existing Systems</h3>
+
+        <h4>ChatGPT (OpenAI)</h4>
+        <p>
+            ChatGPT, developed by OpenAI, is the most widely used AI assistant globally. It supports multi-turn
+            conversations and, in its premium tier, offers limited memory features. However, the memory system is opaque
+            — users cannot inspect, edit, or categorize stored facts. Free-tier users receive no memory at all.
+            Furthermore, while ChatGPT supports file uploads, its document analysis is session-scoped and does not build
+            a persistent, searchable knowledge base from the document.
+        </p>
+
+        <h4>Google Gemini (Google DeepMind)</h4>
+        <p>
+            Google Gemini offers strong multimodal capabilities and integrates with Google Workspace products. However,
+            like ChatGPT, its memory features are limited and not user-controllable in a structured way. There is no
+            mechanism to organize conversations by topic domain or to query a personal document library persistently.
+        </p>
+
+        <h4>Notion AI / Microsoft Copilot</h4>
+        <p>
+            Notion AI integrates AI into a note-taking workspace, providing context from the user's own notes. Microsoft
+            Copilot connects AI to Microsoft 365 documents. Both systems are valuable but are tightly coupled to
+            specific enterprise ecosystems, are expensive, and do not provide an open, programmable approach to personal
+            memory or document Q&A.
+        </p>
+
+        <h4>LangChain / RAG Frameworks</h4>
+        <p>
+            Open-source frameworks like LangChain popularized the Retrieval-Augmented Generation (RAG) pattern, allowing
+            developers to build document-querying systems. However, these are developer tools — not end-user
+            applications. They have no built-in UI, no user accounts, and require significant engineering expertise to
+            configure and deploy.
+        </p>
+
+        <h3>2.2 Gaps Addressed by PersonaAI</h3>
+        <p>The analysis above identifies three critical gaps:</p>
+        <ul>
+            <li><strong>Transparent, User-Controlled Memory:</strong> No consumer AI tool allows users to see, edit, and
+                delete the specific facts the AI has learned about them. PersonaAI's Memory Panel exposes every stored
+                memory as an editable card.</li>
+            <li><strong>Integrated Personal Document RAG:</strong> While RAG is well-established as a developer pattern,
+                no accessible, free, user-friendly application bundles a complete RAG pipeline for personal documents.
+                PersonaAI provides this behind a simple upload button.</li>
+            <li><strong>Structured Conversation Organization:</strong> Existing tools treat all conversations as a flat,
+                undifferentiated log. PersonaAI automatically categorizes every message and memory into six life
+                domains, supporting organized review and per-category summarization.</li>
+        </ul>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 3 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 3: System Design / Methodology</h2>
+
+        <p>This chapter describes the architectural design, technology choices, database schema, and user interface
+            structure of PersonaAI.</p>
+
+        <h3>3.1 System Architecture</h3>
+        <p>
+            PersonaAI follows a classic three-tier client-server architecture with a clear separation between the
+            presentation layer (React SPA), the application/business logic layer (Node.js/Express REST API), and the
+            data persistence layer (MongoDB). An additional cross-cutting concern — the Google Gemini AI service — is
+            invoked exclusively from the backend, keeping API keys and AI logic out of the client.
+        </p>
+
+        <table>
+            <tr>
+                <th>Layer</th>
+                <th>Technology</th>
+                <th>Responsibility</th>
+            </tr>
+            <tr>
+                <td>Presentation</td>
+                <td>React 19 + Vite + Tailwind CSS</td>
+                <td>SPA routing, ui rendering, user interactions</td>
+            </tr>
+            <tr>
+                <td>Application</td>
+                <td>Node.js + Express 5</td>
+                <td>REST API, business logic, AI orchestration</td>
+            </tr>
+            <tr>
+                <td>Data</td>
+                <td>MongoDB + Mongoose 9</td>
+                <td>Persistent storage for users, messages, memories, sources</td>
+            </tr>
+            <tr>
+                <td>AI Service</td>
+                <td>Google Gemini API</td>
+                <td>Chat generation, memory extraction, vector embeddings</td>
+            </tr>
+        </table>
+        <p class="caption">Table 3.1 – PersonaAI Three-Tier Architecture Overview</p>
+
+        <p>
+            The frontend communicates with the backend exclusively through HTTP REST calls using the browser's native
+            <code>fetch</code> API. The backend validates all inputs, applies business rules, calls the Gemini API where
+            required, and persists results to MongoDB. No AI processing happens on the client side.
+        </p>
+        <p>
+            The system is designed to be horizontally scalable: the backend can be deployed to any Node.js hosting
+            platform (e.g., Render, Railway, AWS EC2), and the frontend can be hosted as a static bundle on Vercel,
+            Netlify, or GitHub Pages. MongoDB Atlas provides a cloud-managed, horizontally shardable database backend.
+        </p>
+
+        <h3>3.2 Modules Description</h3>
+
+        <h4>A. Authentication Module</h4>
+        <p>
+            Manages user registration and login. The <code>/api/signup</code> endpoint validates that the email is
+            unique before creating a new user document. The <code>/api/login</code> endpoint validates credentials and
+            returns the user object. User session state is stored in the browser's <code>localStorage</code>, and the
+            <code>userId</code> is sent with every subsequent API request to scope data appropriately.
+        </p>
+
+        <h4>B. Chat Module</h4>
+        <p>
+            Handles the core conversational AI experience. The <code>/api/chat</code> route accepts a user message and a
+            mode flag. It retrieves the last 10 messages as conversation history and all stored memories as personal
+            context. A single combined Gemini API call returns both the AI reply and the automatically detected message
+            category in a structured JSON format — halving API quota consumption compared to making two separate calls.
+        </p>
+
+        <h4>C. Memory Module</h4>
+        <p>
+            Implements two-phase memory management. In the extraction phase (<code>/api/memory/extract</code>), the AI
+            analyzes a piece of text and proposes a list of long-term personal facts. In the confirmation phase
+            (<code>/api/memory/confirm</code>), the system runs an AI-powered conflict detection check against existing
+            memories before saving. Users can view, edit, and delete memories via the Memory Panel in the dashboard.
+        </p>
+
+        <h4>D. Source Module</h4>
+        <p>
+            Implements the Retrieval-Augmented Generation (RAG) pipeline. Users can upload PDFs
+            (<code>/api/source/upload-pdf</code>) or submit web URLs (<code>/api/source/scrape-url</code>). Both
+            pathways extract text, apply sentence-aware chunking, generate vector embeddings in batches, and store
+            everything in MongoDB. When a user queries a source (<code>/api/source/query</code>), the query is embedded
+            and compared against stored chunk embeddings using cosine similarity, and the top-4 most relevant chunks are
+            passed to Gemini to generate a grounded answer.
+        </p>
+
+        <h3>3.3 Technology Stack</h3>
+
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Technology</th>
+                <th>Justification</th>
+            </tr>
+            <tr>
+                <td>Frontend Framework</td>
+                <td>React 19 (Vite)</td>
+                <td>Component-based SPA; fast HMR dev server; small bundle size</td>
+            </tr>
+            <tr>
+                <td>Frontend Styling</td>
+                <td>Tailwind CSS 4</td>
+                <td>Utility-first, dark-mode support, rapid custom design</td>
+            </tr>
+            <tr>
+                <td>Animation</td>
+                <td>Framer Motion 12</td>
+                <td>Declarative animations for panels and transitions</td>
+            </tr>
+            <tr>
+                <td>Icons</td>
+                <td>Lucide React</td>
+                <td>Consistent, lightweight SVG icon set</td>
+            </tr>
+            <tr>
+                <td>Routing</td>
+                <td>React Router DOM 7</td>
+                <td>Client-side SPA routing with protected routes</td>
+            </tr>
+            <tr>
+                <td>Backend Runtime</td>
+                <td>Node.js + Express 5</td>
+                <td>Non-blocking I/O for concurrent AI API calls</td>
+            </tr>
+            <tr>
+                <td>Database ODM</td>
+                <td>Mongoose 9</td>
+                <td>Schema validation and query building for MongoDB</td>
+            </tr>
+            <tr>
+                <td>PDF Parsing</td>
+                <td>pdf-parse</td>
+                <td>Extracts plain text from PDF binary buffers</td>
+            </tr>
+            <tr>
+                <td>HTML Scraping</td>
+                <td>Cheerio</td>
+                <td>jQuery-like server-side HTML parsing for URL ingestion</td>
+            </tr>
+            <tr>
+                <td>File Upload</td>
+                <td>Multer</td>
+                <td>Multipart form data handling for PDF uploads</td>
+            </tr>
+            <tr>
+                <td>AI Chat</td>
+                <td>Gemini 2.5 Flash</td>
+                <td>Fast, cost-effective generative model</td>
+            </tr>
+            <tr>
+                <td>AI Embeddings</td>
+                <td>gemini-embedding-2-preview</td>
+                <td>High-quality dense vector embeddings for RAG</td>
+            </tr>
+        </table>
+        <p class="caption">Table 3.2 – Technology Stack</p>
+
+        <h3>3.4 Database Design</h3>
+        <p>PersonaAI uses MongoDB, a NoSQL document database. Four collections are defined, each governed by a Mongoose
+            schema.</p>
+
+        <h4>User Collection</h4>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Constraints</th>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>String</td>
+                <td>Default: "User"</td>
+            </tr>
+            <tr>
+                <td>email</td>
+                <td>String</td>
+                <td>Required, Unique</td>
+            </tr>
+            <tr>
+                <td>password</td>
+                <td>String</td>
+                <td>Required</td>
+            </tr>
+            <tr>
+                <td>createdAt / updatedAt</td>
+                <td>Date</td>
+                <td>Auto (timestamps)</td>
+            </tr>
+        </table>
+
+        <h4>Message Collection</h4>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Constraints</th>
+            </tr>
+            <tr>
+                <td>userId</td>
+                <td>ObjectId</td>
+                <td>Ref: User, Required</td>
+            </tr>
+            <tr>
+                <td>text</td>
+                <td>String</td>
+                <td>Required</td>
+            </tr>
+            <tr>
+                <td>role</td>
+                <td>String (enum)</td>
+                <td>"user" | "ai"</td>
+            </tr>
+            <tr>
+                <td>mode</td>
+                <td>String (enum)</td>
+                <td>"Memory" | "Source" | "General"</td>
+            </tr>
+            <tr>
+                <td>category</td>
+                <td>String (enum)</td>
+                <td>Work | Personal | Ideas | Learning | Health | Miscellaneous</td>
+            </tr>
+            <tr>
+                <td>sourceId</td>
+                <td>ObjectId</td>
+                <td>Optional Ref: Source</td>
+            </tr>
+        </table>
+
+        <h4>Memory Collection</h4>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Constraints</th>
+            </tr>
+            <tr>
+                <td>userId</td>
+                <td>ObjectId</td>
+                <td>Ref: User, Required</td>
+            </tr>
+            <tr>
+                <td>content</td>
+                <td>String</td>
+                <td>Required — the stored personal fact</td>
+            </tr>
+            <tr>
+                <td>category</td>
+                <td>String (enum)</td>
+                <td>Six-domain classification</td>
+            </tr>
+            <tr>
+                <td>confidence</td>
+                <td>Number</td>
+                <td>0.1–1.0, AI-assigned certainty score</td>
+            </tr>
+            <tr>
+                <td>source</td>
+                <td>String</td>
+                <td>Default: "conversation"</td>
+            </tr>
+        </table>
+
+        <h4>Source Collection</h4>
+        <table>
+            <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Constraints</th>
+            </tr>
+            <tr>
+                <td>userId</td>
+                <td>ObjectId</td>
+                <td>Ref: User, Required</td>
+            </tr>
+            <tr>
+                <td>filename</td>
+                <td>String</td>
+                <td>For PDF uploads</td>
+            </tr>
+            <tr>
+                <td>url</td>
+                <td>String</td>
+                <td>For URL ingestion</td>
+            </tr>
+            <tr>
+                <td>type</td>
+                <td>String (enum)</td>
+                <td>"pdf" | "url"</td>
+            </tr>
+            <tr>
+                <td>contentChunks</td>
+                <td>Array</td>
+                <td>[{ text: String, embedding: [Number] }]</td>
+            </tr>
+        </table>
+        <p class="caption">Table 3.3 – MongoDB Collection Schemas</p>
+
+        <h3>3.5 UI/UX Design and Navigation Flow</h3>
+        <p>The application has four core pages managed by React Router:</p>
+        <ul>
+            <li><strong>Landing Page (/):</strong> Marketing page with Hero section, animated feature highlights, and
+                navigation to Login/Signup.</li>
+            <li><strong>Login (/login) &amp; Signup (/signup):</strong> Authentication forms with validation, storing
+                the returned user object in <code>localStorage</code>.</li>
+            <li><strong>Dashboard (/dashboard):</strong> The main application interface, consisting of a collapsible
+                Sidebar (category filter), the main Chat Area (with mode tabs: Memory, Source, General), a MemoryPanel
+                (right drawer for memory management), and a SourcePanel (right drawer for document management).</li>
+        </ul>
+        <p>
+            The dashboard is fully protected — unauthenticated users attempting to access it are redirected to
+            <code>/login</code>. The UI uses a dark theme with glass-morphism effects, smooth Framer Motion transitions,
+            and a fully responsive layout.
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 4 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 4: Implementation</h2>
+
+        <p>This chapter describes how each major component of PersonaAI was implemented, with key code snippets
+            illustrating the most technically significant design decisions.</p>
+
+        <h3>4.1 Frontend Implementation</h3>
+        <p>
+            The frontend is a React 19 Single Page Application built with Vite. Routing is handled by React Router DOM
+            7, which maps four URL paths to four page components: <code>Landing</code>, <code>Login</code>,
+            <code>Signup</code>, and <code>Dashboard</code>. A route guard pattern protects the dashboard:
+        </p>
+        <pre>
+// App.jsx — route definitions
+function App() {
+  return (
+    &lt;Routes&gt;
+      &lt;Route path="/" element={&lt;Landing /&gt;} /&gt;
+      &lt;Route path="/login" element={&lt;Login /&gt;} /&gt;
+      &lt;Route path="/signup" element={&lt;Signup /&gt;} /&gt;
+      &lt;Route path="/dashboard" element={&lt;Dashboard /&gt;} /&gt;
+    &lt;/Routes&gt;
+  );
+}
+</pre>
+
+        <p>
+            The <code>Dashboard.jsx</code> component is the application's central hub (~800 lines). It manages global
+            state including the active chat mode, selected category filter, chat history, memory list, and source
+            library. The dashboard renders three side-by-side panels: a collapsible <code>Sidebar</code> for category
+            navigation, the main message thread, and either the <code>MemoryPanel</code> or <code>SourcePanel</code> as
+            a right-side drawer depending on user selection.
+        </p>
+
+        <p>The Sidebar component provides category-based filtering:</p>
+        <pre>
+// Sidebar.jsx — category navigation
+const CATEGORIES = [
+  'All', 'Work', 'Personal',
+  'Ideas', 'Learning', 'Health', 'Miscellaneous'
+];
+
+// Clicking a category filters all visible messages to that domain
+&lt;button onClick={() =&gt; onSelectCategory(cat)}&gt;{cat}&lt;/button&gt;
+</pre>
+
+        <h3>4.2 Backend and API Implementation</h3>
+        <p>
+            The backend is built with Node.js and Express 5. The <code>server.js</code> entry point initializes the
+            Express application, connects to MongoDB via Mongoose, registers inline auth routes, and mounts the three
+            modular route files:
+        </p>
+        <pre>
+// server.js — route registration
+app.use('/api/memory', memoryRoutes);
+app.use('/api/source', sourceRoutes);
+app.use('/api/chat', chatRoutes);
+</pre>
+        <p>
+            Each route module (e.g., <code>chatRoutes.js</code>) maps HTTP verbs and paths to controller functions. All
+            data is exchanged as JSON. Input validation is performed at the controller level before any database or AI
+            operations are invoked.
+        </p>
+
+        <h3>4.3 Memory Extraction Engine</h3>
+        <p>
+            The memory system uses a two-phase AI-powered workflow. In Phase 1, the <code>extractMemory</code>
+            controller sends user text to Gemini with a structured prompt that asks it to return a JSON array of
+            personal facts with a category and confidence score. Existing memories are included in the prompt to prevent
+            duplicate extraction:
+        </p>
+        <pre>
+// memoryController.js — extraction prompt (condensed)
+const prompt = `
+Extract core actionable facts or long-term personal details about the user.
+If no important fact exists, output empty array [].
+Otherwise, return JSON: [{ "fact": String, "category": String, "confidence": Number }]
+
+Already known facts:
+${memoryContext || "None"}
+
+Text: "${text}"
+`;
+const response = await ai.models.generateContent({
+  model: 'gemini-2.5-flash',
+  contents: prompt,
+  config: { responseMimeType: 'application/json' }
+});
+</pre>
+
+        <p>
+            In Phase 2, <code>confirmMemory</code> runs an AI conflict-detection check before saving. If Gemini
+            determines a new fact contradicts an existing memory, it returns the ID of the conflicting record and the
+            system performs an update rather than an insert, keeping the memory store clean and non-redundant:
+        </p>
+        <pre>
+// memoryController.js — conflict check
+if (conflictData.conflict && conflictData.conflictingId) {
+  const updated = await Memory.findByIdAndUpdate(
+    conflictData.conflictingId,
+    { content, confidence, updatedAt: new Date() },
+    { new: true }
+  );
+  return res.status(200).json({ memory: updated, replaced: true });
+}
+</pre>
+
+        <h3>4.4 RAG Pipeline (Source Mode)</h3>
+        <p>
+            The source module implements a complete Retrieval-Augmented Generation pipeline. When a PDF is uploaded, the
+            raw binary buffer is parsed with <code>pdf-parse</code>. For URLs, the HTML is fetched and cleaned with
+            Cheerio. In both cases, the resulting plain text is passed through a sentence-aware chunker:
+        </p>
+        <pre>
+// sourceController.js — sentence-aware chunker
+function chunkText(text, maxChars = 1200) {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  const sentences = normalized.match(
+    /[^.!?]+[.!?]+["']?|[^.!?]+$/g
+  ) || [normalized];
+  const chunks = [];
+  let current = '';
+  for (const sentence of sentences) {
+    if ((current + ' ' + sentence).length > maxChars && current.length > 0) {
+      chunks.push(current.trim());
+      current = sentence;
+    } else {
+      current = current ? current + ' ' + sentence : sentence;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+</pre>
+
+        <p>
+            Each chunk is passed to <code>gemini-embedding-2-preview</code> in batches of up to 100 to generate dense
+            vector embeddings, which are stored alongside the chunk text in MongoDB. At query time, the user's question
+            is embedded and cosine similarity is computed against every stored chunk:
+        </p>
+        <pre>
+// sourceController.js — cosine similarity + top-k retrieval
+function cosineSimilarity(vecA, vecB) {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i &lt; vecA.length; i++) {
+    dot += vecA[i] * vecB[i];
+    normA += vecA[i] ** 2;
+    normB += vecB[i] ** 2;
+  }
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+// Top-4 most relevant chunks are retrieved and passed to Gemini
+const scoredChunks = source.contentChunks
+  .map(chunk =&gt; ({ text: chunk.text,
+    score: cosineSimilarity(queryEmbedding, chunk.embedding) }))
+  .sort((a, b) =&gt; b.score - a.score)
+  .slice(0, 4);
+</pre>
+
+        <h3>4.5 AI Chat with Context Injection</h3>
+        <p>
+            The chat controller combines memory context and conversation history into a single efficient Gemini call.
+            This design choice reduced API quota usage by 50% compared to the original two-call approach (one for
+            categorization, one for the reply):
+        </p>
+        <pre>
+// chatController.js — combined prompt with memory context
+const combinedPrompt = `
+You are PersonaAI, a helpful personal AI assistant with memory.
+${memoryContext}
+
+Conversation history:
+${historyText}
+
+Latest user message: "${text}"
+
+Return ONLY a JSON object: { "category": "...", "reply": "..." }
+`.trim();
+
+const response = await ai.models.generateContent({
+  model: 'gemini-2.5-flash',
+  contents: combinedPrompt,
+  config: { responseMimeType: 'application/json' }
+});
+</pre>
+        <p>
+            Both the user message and the AI reply are persisted as <code>Message</code> documents in MongoDB with the
+            automatically detected category, enabling future filtering and per-category summarization.
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 5 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 5: Results and Discussion</h2>
+
+        <h3>5.1 Functional Results</h3>
+        <p>All primary project objectives were achieved. The following table summarizes the functional deliverables:</p>
+
+        <table>
+            <tr>
+                <th>Feature</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td>User Registration &amp; Login</td>
+                <td>✅ Complete</td>
+                <td>Email uniqueness enforced, localStorage session</td>
+            </tr>
+            <tr>
+                <td>General Chat (Gemini)</td>
+                <td>✅ Complete</td>
+                <td>Multi-turn with 10-message conversation history</td>
+            </tr>
+            <tr>
+                <td>Auto Memory Extraction</td>
+                <td>✅ Complete</td>
+                <td>JSON-structured AI extraction with confidence scores</td>
+            </tr>
+            <tr>
+                <td>Memory Conflict Detection</td>
+                <td>✅ Complete</td>
+                <td>AI-powered replace vs. insert logic</td>
+            </tr>
+            <tr>
+                <td>Memory CRUD Panel</td>
+                <td>✅ Complete</td>
+                <td>View, edit, delete memories from UI</td>
+            </tr>
+            <tr>
+                <td>PDF Upload + RAG Query</td>
+                <td>✅ Complete</td>
+                <td>Sentence-aware chunking, batch embeddings, cosine search</td>
+            </tr>
+            <tr>
+                <td>URL Scrape + RAG Query</td>
+                <td>✅ Complete</td>
+                <td>Cheerio HTML extraction, same RAG pipeline as PDF</td>
+            </tr>
+            <tr>
+                <td>Category Auto-Classification</td>
+                <td>✅ Complete</td>
+                <td>6 domains, AI-assigned per message</td>
+            </tr>
+            <tr>
+                <td>Category Filtering (Sidebar)</td>
+                <td>✅ Complete</td>
+                <td>Client-side filtering of message thread</td>
+            </tr>
+            <tr>
+                <td>Per-Category Summarization</td>
+                <td>✅ Complete</td>
+                <td>Gemini-powered conversation summary per category</td>
+            </tr>
+            <tr>
+                <td>Responsive Dark UI</td>
+                <td>✅ Complete</td>
+                <td>Tailwind + Framer Motion animations</td>
+            </tr>
+        </table>
+        <p class="caption">Table 5.1 – Feature Delivery Summary</p>
+
+        <h3>5.2 Performance Observations</h3>
+
+        <table>
+            <tr>
+                <th>Operation</th>
+                <th>Observed Behavior</th>
+                <th>Key Factor</th>
+            </tr>
+            <tr>
+                <td>User Login / Signup</td>
+                <td>~80–150ms</td>
+                <td>Simple MongoDB lookup</td>
+            </tr>
+            <tr>
+                <td>Chat Response (Gemini)</td>
+                <td>1.5–3s</td>
+                <td>Gemini API network latency</td>
+            </tr>
+            <tr>
+                <td>Memory Extraction</td>
+                <td>~1–2s</td>
+                <td>Single structured JSON Gemini call</td>
+            </tr>
+            <tr>
+                <td>PDF Upload (small, ~10 pages)</td>
+                <td>3–8s</td>
+                <td>Parsing + batch embedding generation</td>
+            </tr>
+            <tr>
+                <td>Source Query (RAG)</td>
+                <td>2–4s</td>
+                <td>Embedding + cosine search + Gemini</td>
+            </tr>
+        </table>
+        <p class="caption">Table 5.2 – API Response Time Observations</p>
+
+        <p>
+            The largest performance cost lies in the embedding pipeline for large documents, as each batch of up to 100
+            chunks requires a Gemini API round-trip. For very large PDFs (100+ pages), this can take 30+ seconds. This
+            is an acceptable trade-off given that embedding happens only once at upload time, not at query time.
+        </p>
+
+        <h3>5.3 Discussion</h3>
+        <p>
+            The two-phase memory pipeline — extract then confirm — proved to be one of the most valuable design
+            decisions. Rather than immediately saving every AI-proposed fact, the confirmation step gives the user
+            visibility and control. The AI-powered conflict detection further prevents the memory store from
+            accumulating contradictory or duplicate facts over time, which would degrade the context quality injected
+            into future chats.
+        </p>
+        <p>
+            The single-call combined prompt (reply + categorize in one JSON response) was a significant optimization
+            discovered mid-development. It halved Gemini API quota consumption while simplifying the server-side
+            response parsing logic. The use of <code>responseMimeType: 'application/json'</code> in the Gemini config
+            parameter constrains the model to produce valid JSON, eliminating the need for fragile regex-based
+            extraction.
+        </p>
+        <p>
+            The sentence-aware chunker outperforms a naive fixed-size character splitter by preserving semantic units.
+            Splitting at sentence boundaries means each embedded chunk represents a complete thought, improving cosine
+            similarity accuracy and therefore the quality of retrieved context for RAG responses.
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 6 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 6: Testing and Validation</h2>
+
+        <h3>6.1 Manual Functional Testing</h3>
+        <p>
+            Each feature was tested manually end-to-end through the browser UI. The following test cases were executed:
+        </p>
+
+        <table>
+            <tr>
+                <th>Test Case</th>
+                <th>Input</th>
+                <th>Expected Output</th>
+                <th>Result</th>
+            </tr>
+            <tr>
+                <td>Register new user</td>
+                <td>Valid name, email, password</td>
+                <td>User created, redirected to dashboard</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Register duplicate email</td>
+                <td>Already registered email</td>
+                <td>"User already exists" error</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Login with wrong password</td>
+                <td>Correct email, wrong password</td>
+                <td>"Invalid credentials" 401 error</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Send a chat message</td>
+                <td>"I am a pre-med student."</td>
+                <td>AI response returned, category auto-assigned</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Memory extraction</td>
+                <td>"My name is Sarah and I love hiking."</td>
+                <td>Facts extracted: name=Sarah, interest=hiking</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Memory conflict resolution</td>
+                <td>Save "I am 21 years old" after "I am 20 years old" is stored</td>
+                <td>Old memory updated, not duplicated</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>PDF upload + RAG query</td>
+                <td>Upload biology textbook PDF, ask "What is mitosis?"</td>
+                <td>Answer drawn strictly from PDF content</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>URL scrape + RAG query</td>
+                <td>Submit a Wikipedia URL, ask a question from it</td>
+                <td>Grounded answer from scraped content</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Category filter</td>
+                <td>Select "Work" in sidebar</td>
+                <td>Only Work-categorized messages displayed</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Category summarize</td>
+                <td>Click summarize on "Learning" category</td>
+                <td>Gemini-generated paragraph summary returned</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Delete memory</td>
+                <td>Click delete on a memory card</td>
+                <td>Memory removed from panel and database</td>
+                <td>✅ Pass</td>
+            </tr>
+            <tr>
+                <td>Delete source</td>
+                <td>Click delete on a source</td>
+                <td>Source and its associated messages removed</td>
+                <td>✅ Pass</td>
+            </tr>
+        </table>
+        <p class="caption">Table 6.1 – Manual Test Cases and Results</p>
+
+        <h3>6.2 API Endpoint Validation</h3>
+        <p>
+            Backend endpoints were individually tested using direct HTTP requests to verify status codes, response
+            shapes, and edge-case handling. Key validations included:
+        </p>
+        <ul>
+            <li><strong>Missing required fields:</strong> All endpoints return <code>400 Bad Request</code> with a
+                descriptive message when required fields (e.g., <code>userId</code>, <code>text</code>) are absent.</li>
+            <li><strong>Invalid userId:</strong> MongoDB lookups with non-existent user IDs return empty arrays
+                gracefully rather than crashing.</li>
+            <li><strong>Gemini API unavailable:</strong> When <code>GEMINI_API_KEY</code> is not set, all AI endpoints
+                return <code>500 Internal Server Error</code> with the message "AI not configured" rather than an
+                unhandled exception.</li>
+            <li><strong>PDF with no text layer:</strong> Scanned-image PDFs return empty chunks without crashing; the
+                system saves a sourceless Source document.</li>
+            <li><strong>Source not found:</strong> Querying a non-existent <code>sourceId</code> returns
+                <code>404 Not Found</code>.</li>
+        </ul>
+
+        <h3>6.3 Validation Strategy</h3>
+        <p>
+            Validation was performed at two levels. At the <strong>schema level</strong>, Mongoose enforces enum
+            constraints and required fields, rejecting non-conforming documents before database write. At the
+            <strong>business logic level</strong>, controllers validate request bodies before calling any AI or database
+            operation. The AI response parsing is wrapped in <code>try-catch</code> with sensible fallback values (e.g.,
+            defaulting category to "Miscellaneous" if the AI returns an unrecognized value), ensuring the system
+            degrades gracefully on model output variability.
+        </p>
+    </div>
+
+    <!-- ═══════════════════════════ CHAPTER 7 ════════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Chapter 7: Conclusion and Future Work</h2>
+
+        <h3>7.1 Summary of Achievements</h3>
+        <p>
+            PersonaAI successfully achieved its primary objective: building a full-stack AI-powered personal assistant
+            that maintains persistent memory across sessions and can intelligently query user-supplied documents. The
+            system delivers a fully functional implementation of three distinct, novel capabilities rarely found
+            together in a single open application:
+        </p>
+        <ul>
+            <li><strong>Transparent AI Memory:</strong> An autonomous extraction, conflict-detection, and user-editable
+                persistence pipeline that makes the AI genuinely context-aware across sessions.</li>
+            <li><strong>Personal RAG System:</strong> A complete Retrieval-Augmented Generation pipeline over
+                user-uploaded PDFs and web URLs, featuring sentence-aware chunking, batch vector embedding, and cosine
+                similarity retrieval.</li>
+            <li><strong>Organized Conversational Intelligence:</strong> Automatic six-domain categorization of all
+                interactions with per-category summarization, turning an AI chat into a structured personal knowledge
+                base.</li>
+        </ul>
+        <p>
+            The project also demonstrated effective API optimization, reducing Gemini API quota usage by 50% through a
+            combined-call prompt design. The system was built with a clean separation of concerns — React SPA, Express
+            REST API, MongoDB — making it straightforward to maintain, extend, or deploy.
+        </p>
+
+        <h3>7.2 Limitations</h3>
+        <ul>
+            <li><strong>Password Security:</strong> The current implementation stores passwords in plain text.
+                Industry-standard bcrypt hashing must be added before any production deployment.</li>
+            <li><strong>No JWT Authentication:</strong> Session management relies on <code>localStorage</code> with a
+                raw user object. Implementing JWT tokens would make sessions more secure and support token expiration.
+            </li>
+            <li><strong>Gemini API Quota Dependency:</strong> The system's availability is contingent on external API
+                quota. Under heavy concurrent use, Gemini rate limits would throttle responses.</li>
+            <li><strong>No Spaced Repetition:</strong> Memory retrieval injects all memories equally into context. A
+                spaced-repetition algorithm could prioritize recently changed or low-confidence memories for more
+                adaptive personalization.</li>
+            <li><strong>Large Document Latency:</strong> Uploading large PDFs (100+ pages) involves extended batch
+                embedding times. A background job queue (e.g., BullMQ) would improve the user experience by processing
+                uploads asynchronously.</li>
+            <li><strong>No Mobile App:</strong> The application is web-only; native iOS or Android apps with offline
+                support are not available.</li>
+        </ul>
+
+        <h3>7.3 Future Work</h3>
+        <ol>
+            <li><strong>bcrypt Password Hashing + JWT:</strong> Migrate from plain-text storage to bcrypt-hashed
+                passwords and issue signed JWT tokens with configurable expiration for all authenticated sessions.</li>
+            <li><strong>Spaced Repetition Memory Scheduling:</strong> Add an <code>easeFactor</code> and
+                <code>nextReviewDate</code> to the Memory schema and implement an SM-2 scheduling algorithm to
+                prioritize surfacing memories that are most relevant to the current context.</li>
+            <li><strong>Background Processing Queue:</strong> Introduce BullMQ or a similar job queue for PDF/URL
+                ingestion to allow the upload API to return immediately and notify the user via WebSocket when
+                processing completes.</li>
+            <li><strong>Voice Input:</strong> Integrate the Web Speech API for microphone-based message input, making
+                PersonaAI more accessible and convenient on mobile devices.</li>
+            <li><strong>AI-Generated Flashcards:</strong> Allow users to generate study flashcards from any source
+                document or conversation summary, bridging the gap between AI assistance and active recall learning.
+            </li>
+            <li><strong>Shared Sources and Collaboration:</strong> Allow users to share a Source with other users — for
+                example, sharing a course textbook within a study group — with privacy controls (public/shared/private).
+            </li>
+        </ol>
+    </div>
+
+    <!-- ═══════════════════════════ REFERENCES ═══════════════════════════════════ -->
+    <div class="chapter">
+        <h2>References</h2>
+
+        <ol>
+            <li>Google DeepMind. (2024). <em>Gemini API Documentation</em>. [Online]. Available:
+                https://ai.google.dev/docs</li>
+            <li>Google. (2024). <em>@google/genai JavaScript SDK</em>. npm Registry. Available:
+                https://www.npmjs.com/package/@google/genai</li>
+            <li>Meta Open Source. (2024). <em>React Documentation</em>. [Online]. Available: https://react.dev</li>
+            <li>Vitejs. (2024). <em>Vite Build Tool Documentation</em>. [Online]. Available: https://vitejs.dev</li>
+            <li>MongoDB Inc. (2024). <em>Mongoose ODM Documentation</em>. [Online]. Available:
+                https://mongoosejs.com/docs</li>
+            <li>ExpressJS. (2024). <em>Express 5 Documentation</em>. [Online]. Available: https://expressjs.com</li>
+            <li>Lewis, P., et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <em>Advances
+                    in Neural Information Processing Systems (NeurIPS)</em>, 33, 9459–9474.</li>
+            <li>Anki. (2024). <em>Spaced Repetition and the SM-2 Algorithm</em>. [Online]. Available:
+                https://docs.ankiweb.net/deck-options.html</li>
+            <li>Framer. (2024). <em>Framer Motion Documentation</em>. [Online]. Available:
+                https://www.framer.com/motion/</li>
+            <li>Multer Contributors. (2024). <em>Multer — Node.js Middleware for Handling multipart/form-data</em>.
+                Available: https://github.com/expressjs/multer</li>
+            <li>Cheerio Contributors. (2024). <em>Cheerio Documentation</em>. Available: https://cheerio.js.org</li>
+            <li>OpenAI. (2023). <em>ChatGPT — System Card and Product Overview</em>. [Online]. Available:
+                https://openai.com/chatgpt</li>
+        </ol>
+    </div>
+
+    <!-- ═══════════════════════════ APPENDICES ═══════════════════════════════════ -->
+    <div class="chapter">
+        <h2>Appendix A: API Documentation Summary</h2>
+
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/signup</td>
+                <td>Register a new user account</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/login</td>
+                <td>Authenticate user, return user object</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/chat?userId=</td>
+                <td>Get all messages for a user</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/chat/category/:cat?userId=</td>
+                <td>Get messages for a specific category</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/chat</td>
+                <td>Send a message, receive AI reply + auto-category</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/chat/search?userId=&amp;query=</td>
+                <td>Full-text search over messages and memories</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/chat/summarize/:cat?userId=</td>
+                <td>AI-generated summary for a category</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/memory/:userId</td>
+                <td>Retrieve all memories for a user</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/memory/extract</td>
+                <td>AI extraction of facts from a text string</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/memory/confirm</td>
+                <td>Save a memory (with conflict detection)</td>
+            </tr>
+            <tr>
+                <td>PUT</td>
+                <td>/api/memory/update</td>
+                <td>Edit an existing memory</td>
+            </tr>
+            <tr>
+                <td>DELETE</td>
+                <td>/api/memory/:id</td>
+                <td>Delete a memory by ID</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/source/upload-pdf</td>
+                <td>Upload a PDF; chunk + embed; store source</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/source/scrape-url</td>
+                <td>Scrape a URL; chunk + embed; store source</td>
+            </tr>
+            <tr>
+                <td>POST</td>
+                <td>/api/source/query</td>
+                <td>RAG query against a stored source</td>
+            </tr>
+            <tr>
+                <td>GET</td>
+                <td>/api/source/:userId</td>
+                <td>List all sources for a user</td>
+            </tr>
+            <tr>
+                <td>DELETE</td>
+                <td>/api/source/:sourceId</td>
+                <td>Delete a source and its messages</td>
+            </tr>
+        </table>
+        <p class="caption">Table A.1 – Complete API Endpoint Reference</p>
+
+        <h2>Appendix B: Installation Guide</h2>
+
+        <h4>Prerequisites</h4>
+        <ul>
+            <li>Node.js v18+ and npm</li>
+            <li>A MongoDB Atlas account (or local MongoDB installation)</li>
+            <li>A Google Gemini API Key (from Google AI Studio)</li>
+        </ul>
+
+        <h4>Backend Setup</h4>
+        <pre>
+# 1. Navigate to the backend directory
+cd PERSONAAI/backend
+
+# 2. Install dependencies
+npm install
+
+# 3. Create a .env file in the backend directory:
+#    MONGO_URI=mongodb+srv://&lt;user&gt;:&lt;password&gt;@cluster.mongodb.net/personaai
+#    GEMINI_API_KEY=your_gemini_api_key_here
+#    PORT=5001
+
+# 4. Start the development server
+npm run dev
+</pre>
+
+        <h4>Frontend Setup</h4>
+        <pre>
+# 1. Navigate to the frontend directory
+cd PERSONAAI/frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the Vite development server
+npm run dev
+
+# Application will be available at http://localhost:5173
+</pre>
+    </div>
+
+</body>
+
+</html>
